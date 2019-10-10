@@ -76,5 +76,7 @@ int main(int argc, char const *argv[])
     // fflush(stdout);
     printf("after %d\n", rank);
     
+
+    MPI_Finalize();
     return 0;
 }
