@@ -13,21 +13,21 @@ int parent(int rank)
     return (rank-1)/2;
 }
 
-int mpi_iittp_barrier(int rank, int world_size)
+void mpi_iittp_barrier(int rank, int world_size)
 {
     if(world_size==1)
-        return 0;
+        return;
     if(rank==0)
     {
         int token = 1;
         if(1<world_size)
-            MPI_Send(&token, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
-        if(2<world_size)
-            MPI_Send(&token, 1, MPI_INT, 2, 0, MPI_COMM_WORLD);
-        if(1<world_size)
             MPI_Recv(&token, 1, MPI_INT, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         if(2<world_size)
             MPI_Recv(&token, 1, MPI_INT, 2, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if(1<world_size)
+            MPI_Send(&token, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
+        if(2<world_size)
+            MPI_Send(&token, 1, MPI_INT, 2, 0, MPI_COMM_WORLD);
     }
     else
     {
@@ -35,26 +35,28 @@ int mpi_iittp_barrier(int rank, int world_size)
         {
             int token=0;
             int parent1 = parent(rank);
-            MPI_Recv(&token, 1, MPI_INT, parent1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            if(2*rank+1 < world_size)
-                MPI_Send(&token, 1, MPI_INT, 2*rank+1, 0, MPI_COMM_WORLD);
-            if(2*rank+2 < world_size)
-                MPI_Send(&token, 1, MPI_INT, 2*rank+2, 0, MPI_COMM_WORLD);
+            
             if(2*rank+1 < world_size)
                 MPI_Recv(&token, 1, MPI_INT, 2*rank+1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             if(2*rank+2 < world_size)
                 MPI_Recv(&token, 1, MPI_INT, 2*rank+2, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             MPI_Send(&token, 1, MPI_INT, parent1, 1, MPI_COMM_WORLD);
+
+            MPI_Recv(&token, 1, MPI_INT, parent1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            if(2*rank+1 < world_size)
+                MPI_Send(&token, 1, MPI_INT, 2*rank+1, 0, MPI_COMM_WORLD);
+            if(2*rank+2 < world_size)
+                MPI_Send(&token, 1, MPI_INT, 2*rank+2, 0, MPI_COMM_WORLD);
         }
         else if(2*rank+1 >= world_size) // no children in tree
         {
             int token=0;
             int parent1 = parent(rank);
-            MPI_Recv(&token, 1, MPI_INT, parent1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             MPI_Send(&token, 1, MPI_INT, parent1, 1, MPI_COMM_WORLD);
+            MPI_Recv(&token, 1, MPI_INT, parent1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
     }
-    return 0;
+    return;
 }
 
 int main(int argc, char const *argv[])
@@ -69,7 +71,7 @@ int main(int argc, char const *argv[])
     // fflush(stdout);
     printf("before %d\n", rank);
 
-    int status = mpi_iittp_barrier(rank, world_size);
+    mpi_iittp_barrier(rank, world_size);
     // MPI_Barrier(MPI_COMM_WORLD);
     // fflush(stdout);
     printf("after %d\n", rank);
