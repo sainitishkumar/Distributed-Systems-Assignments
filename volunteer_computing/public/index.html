@@ -1,0 +1,38 @@
+<html>
+    <head>BOINC simulation</head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.5/socket.io.js"></script>
+    <script>
+        var socket = io();
+        socket.on("number", function(data){
+            console.log(data.num);
+            var ele = document.getElementById("recv_num");
+            ele.innerText = data.num;
+            var flag = false;
+            for(var i=3;i<Math.sqrt(data.num);i++)
+            {
+                if(data.num % i==0)
+                {
+                    flag=true;
+                }
+            }
+            console.log(flag);
+            if(!flag)
+            {
+                var max_prime = Math.max(data.num, data.max_prime);
+                socket.emit("result", {"max_prime": max_prime});
+            }
+        });
+        socket.on("max_prime", function(data){
+            var ele = document.getElementById("max_prime");
+            ele.innerText = data.max_prime;
+            console.log(data.max_prime, "kdiwuek");
+        });
+    </script>
+    <body>
+        <br>
+        you got:
+        <p id="recv_num"></p>
+        max prime till now is:
+        <p id="max_prime"></p>
+    </body>
+</html>
